@@ -14,12 +14,17 @@ const tokenParameters = {
 
 describe("Token Contract Tests", function () {
     let token;
+    let accounts;
+    let deployer;
 
     beforeEach(async () => {
         token = await deployTokenContract(
             tokenParameters.name,
             tokenParameters.symbol,
             tokenParameters.totalSupply);
+
+        accounts = await ethers.getSigners();
+        deployer = accounts[0].address;
     });
 
     describe('Deployment', () => {
@@ -41,6 +46,11 @@ describe("Token Contract Tests", function () {
         it("Should deploy contract with correct totalSupply", async () => {
             // Act & Assert
             expect(await token.totalSupply()).to.equal(tokens(tokenParameters.totalSupply));
+        });
+
+        it("Should deploy contract with correct balanceOf", async () => {
+            // Act & Assert
+            expect(await token.balanceOf(deployer)).to.equal(tokens(tokenParameters.totalSupply));
         });
     });
 

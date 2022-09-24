@@ -10,6 +10,12 @@ contract Token {
     uint256 public decimals = 18;
     uint256 public totalSupply;
 
+    // Track Balances
+    mapping(address => uint256) public balanceOf;
+
+    // Send Tokens
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
     constructor(
         string memory _name,
         string memory _symbol,
@@ -18,6 +24,7 @@ contract Token {
         name = _name;
         symbol = _symbol;
         totalSupply = _totalSupply * (10**decimals);
+        balanceOf[msg.sender] = totalSupply;
 
         console.log(
             "Deploying a Token with name %s symbol %s and %s decimals",
