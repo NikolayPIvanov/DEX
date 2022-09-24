@@ -19,7 +19,6 @@ describe("Token Contract Tests", function () {
         token = await deployTokenContract(
             tokenParameters.name,
             tokenParameters.symbol,
-            tokenParameters.decimals,
             tokenParameters.totalSupply);
     });
 
@@ -47,9 +46,9 @@ describe("Token Contract Tests", function () {
 
 });
 
-async function deployTokenContract(name, symbol, decimals, totalSupply) {
+async function deployTokenContract(name, symbol, totalSupply) {
     const Token = await ethers.getContractFactory("Token");
-    const token = await Token.deploy(name, symbol, decimals, totalSupply);
+    const token = await Token.deploy(name, symbol, totalSupply);
     await token.deployed();
     return token;
 }
