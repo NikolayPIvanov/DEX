@@ -102,6 +102,44 @@ describe("Token Contract Tests", function () {
             });
         });
     });
+
+    describe(('Approving Token'), () => {
+        describe(('Failure'), () => {
+            it('Should reject approval to zero address', async () => {
+                // Arrange
+                const to = ethers.constants.AddressZero;
+                const amount = tokens('100');
+
+                // Act & Assert
+                await expect(token.approve(to, amount)).to.be.revertedWith('ERC20: approve to the zero address');
+            });
+        });
+
+        describe('Success', () => {
+            it('Approves token for delegated transfer', async () => {
+                // Arrange
+                const recipient = accounts[1].address;
+                const amount = tokens('100');
+
+                // Act
+                await token.approve(recipient, amount);
+
+                // Assert
+                expect(await token.allowance(deployer, recipient)).to.equal(amount);
+            });
+
+            it('Emits an approval event', async () => {
+                // Arrange
+                const recipient = accounts[1].address;
+                const amount = tokens('100');
+
+                // Act
+                await expect(token.approve(recipient, amount))
+                    .to.emit(token, 'Approval')
+                    .withArgs(deployer, recipient, amount);
+            });
+        });
+    });
 });
 
 async function deployTokenContract(name, symbol, totalSupply) {
