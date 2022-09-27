@@ -54,6 +54,54 @@ describe("Token Contract Tests", function () {
         });
     });
 
+    describe(('Sending Token'), () => {
+        describe(('Failure'), () => {
+            it('Should reject insufficient balance', async () => {
+                // Arrange
+                const to = accounts[1].address;
+                const amount = tokens('1000001');
+
+                // Act & Assert
+                const transfer = token.connect(accounts[1]).transfer(to, amount);
+                await expect(transfer).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+            });
+
+            it('Should reject transfer to zero address', async () => {
+                // Arrange
+                const to = ethers.constants.AddressZero;
+                const amount = tokens('100');
+
+                // Act & Assert
+                await expect(token.transfer(to, amount)).to.be.revertedWith('ERC20: transfer to the zero address');
+            });
+        });
+
+        describe('Success', () => {
+            it('Transfers token balances', async () => {
+                // Arrange
+                const recipient = accounts[1].address;
+                const amount = tokens('100');
+
+                // Act
+                await token.transfer(recipient, amount);
+
+                // Assert
+                expect(await token.balanceOf(deployer)).to.equal(tokens('999900'));
+                expect(await token.balanceOf(recipient)).to.equal(tokens('100'));
+            });
+
+            it('Emits a transfer event', async () => {
+                // Arrange
+                const recipient = accounts[1].address;
+                const amount = tokens('100');
+
+                // Act
+                await expect(token.transfer(recipient, amount))
+                    .to.emit(token, 'Transfer')
+                    .withArgs(deployer, recipient, amount);
+            });
+        });
+    });
 });
 
 async function deployTokenContract(name, symbol, totalSupply) {

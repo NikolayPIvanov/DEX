@@ -33,4 +33,20 @@ contract Token {
             decimals
         );
     }
+
+    function transfer(address _to, uint256 _value)
+        public
+        returns (bool success)
+    {
+        require(
+            balanceOf[msg.sender] >= _value,
+            "ERC20: transfer amount exceeds balance"
+        );
+        require(_to != address(0), "ERC20: transfer to the zero address");
+
+        balanceOf[msg.sender] -= _value;
+        balanceOf[_to] += _value;
+        emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
 }
