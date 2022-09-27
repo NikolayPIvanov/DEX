@@ -16,6 +16,8 @@ describe("Token Contract Tests", function () {
     let token;
     let accounts;
     let deployer;
+    let receiver;
+    let exchange;
 
     beforeEach(async () => {
         token = await deployTokenContract(
@@ -24,7 +26,9 @@ describe("Token Contract Tests", function () {
             tokenParameters.totalSupply);
 
         accounts = await ethers.getSigners();
-        deployer = accounts[0].address;
+        deployer = accounts[0];
+        receiver = accounts[1];
+        exchange = accounts[2];
     });
 
     describe('Deployment', () => {
@@ -50,7 +54,7 @@ describe("Token Contract Tests", function () {
 
         it("Should deploy contract with correct balanceOf", async () => {
             // Act & Assert
-            expect(await token.balanceOf(deployer)).to.equal(tokens(tokenParameters.totalSupply));
+            expect(await token.balanceOf(deployer.address)).to.equal(tokens(tokenParameters.totalSupply));
         });
     });
 
@@ -86,7 +90,7 @@ describe("Token Contract Tests", function () {
                 await token.transfer(recipient, amount);
 
                 // Assert
-                expect(await token.balanceOf(deployer)).to.equal(tokens('999900'));
+                expect(await token.balanceOf(deployer.address)).to.equal(tokens('999900'));
                 expect(await token.balanceOf(recipient)).to.equal(tokens('100'));
             });
 
@@ -98,7 +102,7 @@ describe("Token Contract Tests", function () {
                 // Act
                 await expect(token.transfer(recipient, amount))
                     .to.emit(token, 'Transfer')
-                    .withArgs(deployer, recipient, amount);
+                    .withArgs(deployer.address, recipient, amount);
             });
         });
     });
@@ -125,7 +129,7 @@ describe("Token Contract Tests", function () {
                 await token.approve(recipient, amount);
 
                 // Assert
-                expect(await token.allowance(deployer, recipient)).to.equal(amount);
+                expect(await token.allowance(deployer.address, recipient)).to.equal(amount);
             });
 
             it('Emits an approval event', async () => {
@@ -136,7 +140,72 @@ describe("Token Contract Tests", function () {
                 // Act
                 await expect(token.approve(recipient, amount))
                     .to.emit(token, 'Approval')
-                    .withArgs(deployer, recipient, amount);
+                    .withArgs(deployer.address, recipient, amount);
+            });
+        });
+    });
+
+    describe(('Sending Token From'), () => {
+        describe(('Failure'), () => {
+            it('Should reject insufficient allowance', async () => {
+                // Arrange
+                const amount = tokens('100');
+
+                // Act
+                await token.connect(deployer).approve(exchange.address, amount);
+
+                // Assert
+                const transfer = token.connect(exchange).transferFrom(deployer.address, exchange.address, tokens('1000'));
+                await expect(transfer).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
+            });
+
+            it('Should reject insufficient balance', async () => {
+                // Arrange
+                const amount = tokens('100');
+
+                // Act
+                await token.connect(deployer).approve(exchange.address, amount);
+
+                const exceededAmount = tokens('1000001');
+
+                // Assert
+                const transfer = token.connect(exchange).transferFrom(deployer.address, exchange.address, exceededAmount);
+                await expect(transfer).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+            });
+
+            it('Should reject transfer to zero address', async () => {
+                // Arrange
+                const amount = tokens('100');
+                const to = ethers.constants.AddressZero;
+
+                // Act
+                await token.connect(deployer).approve(exchange.address, amount);
+
+                // Assert
+                const transfer = token.connect(exchange).transferFrom(deployer.address, to, amount);
+                await expect(transfer).to.be.revertedWith('ERC20: transfer to the zero address');
+            });
+        });
+
+        describe('Success', () => {
+            it('Transfers token balances', async () => {
+                // Arrange
+                const amount = tokens('100');
+                const recipient = accounts[4].address;
+
+                // Act
+                await token.connect(deployer).approve(exchange.address, amount);
+                await token.connect(exchange).transferFrom(deployer.address, recipient, amount);
+
+                // Assert
+                expect(await token.balanceOf(deployer.address)).to.equal(tokens('999900'));
+                expect(await token.balanceOf(recipient)).to.equal(tokens('100'));
+            });
+
+            it('Emits a transfer event', async () => {
+                // Arrange
+                const owner = accounts[1].address;
+                const spender = accounts[2].address;
             });
         });
     });
