@@ -1,9 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-
-const tokens = (value, decimals = 'ether') => {
-    return ethers.utils.parseUnits(value, decimals);
-}
+const { tokens } = require("./utils/token-utils");
 
 const tokenParameters = {
     name: "Token",
