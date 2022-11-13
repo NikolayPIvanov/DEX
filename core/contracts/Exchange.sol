@@ -9,6 +9,7 @@ contract Exchange {
     uint256 public feePercent; // the fee percentage
     mapping(address => mapping(address => uint256)) public tokens;
     mapping(uint256 => _Order) public orders;
+    mapping(uint256 => bool) public cancelledOrders;
     uint256 public orderCount;
 
     event Deposit(address token, address user, uint256 amount, uint256 balance);
@@ -19,6 +20,15 @@ contract Exchange {
         uint256 balance
     );
     event Order(
+        uint256 id,
+        address user,
+        address sell,
+        uint256 sellAmount,
+        address buy,
+        uint256 buyAmount,
+        uint256 timestamp
+    );
+    event Cancelled(
         uint256 id,
         address user,
         address sell,
@@ -83,7 +93,10 @@ contract Exchange {
         address _tokenBuy,
         uint256 _tokenBuyAmount
     ) public {
-        require(checkBalance(_tokenSell, msg.sender) >= _tokenSellAmount);
+        require(
+            checkBalance(_tokenSell, msg.sender) >= _tokenSellAmount,
+            "Insufficient balance"
+        );
 
         orderCount = orderCount + 1;
 
@@ -109,4 +122,23 @@ contract Exchange {
     }
 
     // Cancel Order
+    function cancelOrder(uint256 _id) public {
+        _Order storage _order = orders[_id];
+        require(address(_order.user) == msg.sender, "Unauthorized");
+        require(_order.id == _id, "Invalid order");
+
+        cancelledOrders[_id] = true;
+
+        _order.id = 0;
+
+        emit Cancelled(
+            _order.id,
+            msg.sender,
+            _order.sell,
+            _order.sellAmount,
+            _order.buy,
+            _order.buyAmount,
+            block.timestamp
+        );
+    }
 }

@@ -139,7 +139,7 @@ describe("Exchange", function () {
         let transaction, result, amount;
 
         beforeEach(async () => {
-            amount = tokens('10');
+            amount = tokens('1');
 
             // Approve tokens
             transaction = await token1
@@ -155,7 +155,7 @@ describe("Exchange", function () {
         });
 
         describe("Success", () => {
-            this.beforeEach(async () => {
+            beforeEach(async () => {
                 transaction = await exchange
                     .connect(user1)
                     .makeOrder(token1.address, tokens('1'), token2.address, tokens('1'));
